@@ -1,0 +1,44 @@
+version: '3.4'
+services:
+  jira:
+#    build: .
+    image: zhaolj/jira:8.14.0
+#    image: haxqer/jira:rm
+    container_name: jira
+    environment:
+      - TZ='Asia/Shanghai'
+#      - JVM_MINIMUM_MEMORY=1g
+#      - JVM_MAXIMUM_MEMORY=12g
+#      - JVM_CODE_CACHE_ARGS='-XX:InitialCodeCacheSize=1g -XX:ReservedCodeCacheSize=8g'
+    depends_on:
+      - mysql
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data/jira:/var/jira
+    restart: always
+    networks:
+      - network-bridge
+
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    environment:
+      - TZ='Asia/Shanghai'
+      - MYSQL_DATABASE=jira
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_USER=jira
+      - MYSQL_PASSWORD=123123
+    command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_bin']
+    ports:
+      - "13306:3306"
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    restart: always
+    networks:
+      - network-bridge
+
+networks:
+  network-bridge:
+    driver: bridge
+
