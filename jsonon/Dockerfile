@@ -1,4 +1,4 @@
-FROM nginx:1.14.0-alpine
+FROM nginx:1.19.0-alpine
 
 LABEL maintainer="mritd <mritd@linux.com>"
 

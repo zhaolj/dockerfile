@@ -1,32 +1,37 @@
-FROM alpine:3.8
+FROM alpine:3.12
 
 LABEL maintainer="mritd <mritd@linux.com>"
 
 ARG TZ="Asia/Shanghai"
 
 ENV TZ ${TZ} 
-ENV MATTERMOST_VERSION 5.5.1
+ENV MATTERMOST_VERSION 5.25.2
 ENV MATTERMOST_HOME /mattermost
 ENV MATTERMOST_DATA_DIR /data
-ENV MATTERMOST_DOWNLOAD_URL https://releases.mattermost.com/${MATTERMOST_VERSION}/mattermost-${MATTERMOST_VERSION}-linux-amd64.tar.gz
+ENV MATTERMOST_DOWNLOAD_URL https://releases.mattermost.com/${MATTERMOST_VERSION}/mattermost-team-${MATTERMOST_VERSION}-linux-amd64.tar.gz
 
-RUN apk upgrade \
-    && apk add bash tzdata wget ca-certificates \
+ENV PATH ${PATH}:${MATTERMOST_HOME}/bin
+
+RUN set -ex \
+    && apk upgrade \
+    && apk add bash tzdata curl ca-certificates \
         libc6-compat libffi-dev mailcap \
-    && wget ${MATTERMOST_DOWNLOAD_URL} \
-    && tar -xzf mattermost*.gz \
-    && mkdir ${MATTERMOST_DATA_DIR} \
-    && ln -s ${MATTERMOST_DATA_DIR} ${MATTERMOST_HOME}/data \
+    && curl -s ${MATTERMOST_DOWNLOAD_URL} | tar -xz \
+    && ln -sf ${MATTERMOST_DATA_DIR} ${MATTERMOST_HOME}/data \
+    && ln -sf ${MATTERMOST_DATA_DIR}/logs ${MATTERMOST_HOME}/logs \
     && ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime \
     && echo ${TZ} > /etc/timezone \
-    && rm -rf mattermost-${MATTERMOST_VERSION}-linux-amd64.tar.gz \
-            ${MATTERMOST_HOME}/bin/platform \
+    && rm -rf ${MATTERMOST_HOME}/bin/platform \
             /var/cache/apk/*
 
-WORKDIR ${MATTERMOST_HOME}/bin
+WORKDIR ${MATTERMOST_HOME}
 
 VOLUME ${MATTERMOST_DATA_DIR}
 
 EXPOSE 8065
 
-CMD ["./mattermost","server"]
+COPY entrypoint.sh /
+
+ENTRYPOINT ["/entrypoint.sh"]
+
+CMD ["mattermost","server"]
